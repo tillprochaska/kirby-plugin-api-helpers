@@ -1,0 +1,26 @@
+{
+    "name": "tillprochaska/kirby-plugin-api-helpers",
+    "type": "library",
+    "license": "MIT",
+    "minimum-stability": "beta",
+    "authors": [
+        {
+            "name": "Till Prochaska",
+            "email": "mail@tillprochaska.de"
+        }
+    ],
+    "scripts": {
+        "test": "vendor/bin/phpunit --testdox --colors=always --bootstrap test/support/bootstrap.php test/unit"
+    },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/k-next/kirby"
+        }
+    ],
+    "require": {},
+    "require-dev": {
+        "getkirby/cms": "dev-master",
+        "phpunit/phpunit": "^7.2"
+    }
+}

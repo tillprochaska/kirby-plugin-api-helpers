@@ -1,0 +1,11 @@
+Title: Brand B
+
+----
+
+Description: Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus.
+
+----
+
+Products:
+- products/product-c
+- product/invalid-product
