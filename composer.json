@@ -12,15 +12,21 @@
     "scripts": {
         "test": "vendor/bin/phpunit --testdox --colors=always --bootstrap test/support/bootstrap.php test/unit"
     },
+    "autoload": {
+        "psr-4": {
+            "TillProchaska\\ApiHelpers\\": "src/"
+        }
+    },
     "repositories": [
         {
             "type": "vcs",
             "url": "https://github.com/k-next/kirby"
         }
     ],
-    "require": {},
+    "require": {
+        "getkirby/cms": "dev-master"
+    },
     "require-dev": {
-        "getkirby/cms": "dev-master",
         "phpunit/phpunit": "^7.2"
     }
 }
