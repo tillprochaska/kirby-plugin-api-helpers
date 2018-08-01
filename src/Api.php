@@ -12,6 +12,7 @@ use \Kirby\Cms\Pages as KirbyPages;
 class Api {
 
     private $base;
+    private $headers;
     private $routes;
     private $schema;
 
@@ -20,8 +21,9 @@ class Api {
      *
      * @param string $base Root path
      */
-    public function __construct(string $base = '') {
+    public function __construct(string $base = '', array $headers = []) {
         $this->base = trim($base, '/');
+        $this->headers = $headers;
         $this->routes = [];
         $this->schemas = [];
     }
@@ -73,7 +75,7 @@ class Api {
         foreach($this->routes as $route) {
             $action = function(string ...$arguments) use($self, $route) {
                 $data = call_user_func_array($route['action'], $arguments);
-                return $self->response($data);
+                return $self->autoResponse($data);
             };
 
             $routes[] = [
@@ -87,7 +89,7 @@ class Api {
             'pattern' => [ $this->base, $this->base . '/(:any)' ],
             'method' => 'ALL',
             'action' => function() use($self) {
-                return $self::errorResponse(404);
+                return $self->errorResponse(404);
             }
         ];
 
@@ -101,7 +103,7 @@ class Api {
      *
      * @param array $data Response body
      */
-    public function response(?array $data): Response {
+    public function autoResponse(?array $data): Response {
         $status = $data['status'] ?? null;
         $schema = $data['schema'] ?? null;
 
@@ -113,7 +115,7 @@ class Api {
             return $this->collectionResponse($data['collection'], $schema, $status);
         }
 
-        return Response::json($data);
+        return $this->jsonResponse($data);
     }
 
     /**
@@ -131,12 +133,12 @@ class Api {
         }
 
         if(!$page) {
-            return self::errorResponse(404);
+            return $this->errorResponse(404);
         }
 
         $data = new Page($page, $schema);
         $data = $data->toArray();
-        return self::successResponse($data, $code);
+        return $this->successResponse($data, $code);
 
     }
 
@@ -155,12 +157,12 @@ class Api {
         }
 
         if(!$collection) {
-            return self::errorResponse(404);
+            return $this->errorResponse(404);
         }
 
         $data = new Collection($collection, $schema);
         $data = $data->toArray();
-        return self::successResponse($data);
+        return $this->successResponse($data);
 
     }
 
@@ -170,10 +172,10 @@ class Api {
      * @param array $data Response data
      * @param integer $code HTTP status code
      */
-    public static function successResponse(array $data, ?int $code = null): Response {
+    public function successResponse(array $data, ?int $code = null): Response {
         if(!$code) $code = 200;
 
-        return Response::json([
+        return $this->jsonResponse([
             'status' => 'ok',
             'code' => $code,
             'data' => $data,
@@ -186,7 +188,7 @@ class Api {
      * @param integer $code HTTP status code
      * @param string $message Error message
      */
-    public static function errorResponse(?int $code = null, ?string $message = null): Response {
+    public function errorResponse(?int $code = null, ?string $message = null): Response {
         if(!$code) $code = 500;
 
         $messages = [
@@ -198,11 +200,26 @@ class Api {
             500 => 'Internal Server Error',
         ];
 
-        return Response::json([
+        return $this->jsonResponse([
             'status' => 'error',
             'code' => $code,
             'message' => $message ?? $messages[$code] ?? '',
         ], $code);
+    }
+
+    /**
+     * Returns a JSON formatted response
+     *
+     * @param array $data Response body
+     * @param integer $code HTTP status code
+     */
+    public function jsonResponse(?array $data = null, ?int $code = null): Response {
+        return new Response(
+            json_encode($data),
+            'application/json',
+            $code ?? 200,
+            $this->headers
+        );
     }
 
     /**

@@ -6,11 +6,26 @@ final class ApiCase extends KirbyTestCase {
 
     public function setUp() {
         $this->kirby();
-        $this->api = new Api('/v1/');
+        $this->api = new Api('/v1/', [
+            'Access-Control-Allow-Origin' => '*',
+        ]);
     }
 
     public function testCanBeCreated() {
         $this->assertInstanceof(Api::class, $this->api);
+    }
+
+    public function testAddCustomHeaders() {
+        $expected = ['Access-Control-Allow-Origin' => '*'];
+
+        $auto = $this->api->autoResponse([])->headers();
+        $this->assertEquals($auto, $expected);
+
+        $success = $this->api->successResponse([])->headers();
+        $this->assertEquals($success, $expected);
+        
+        $error = $this->api->errorResponse()->headers();
+        $this->assertEquals($error, $expected);
     }
 
     public function testAddAndGetSchema() {
@@ -62,7 +77,7 @@ final class ApiCase extends KirbyTestCase {
     }
 
     public function testConvertsPageToJsonRepresentation() {
-        $response = $this->api->response([
+        $response = $this->api->autoResponse([
             'page' => page('products/product-a'),
         ]);
         $this->assertEquals($this->api->successResponse([
@@ -71,14 +86,14 @@ final class ApiCase extends KirbyTestCase {
     }
 
     public function testReturnsErrorResponseIfInvalidPage() {
-        $response = $this->api->response([
+        $response = $this->api->autoResponse([
             'page' => page('products/invalid-product'),
         ]);
         $this->assertEquals($this->api->errorResponse(404), $response);
     }
 
     public function testConvertsCollectionToJsonRepresentation() {
-        $response = json_decode($this->api->response([
+        $response = json_decode($this->api->autoResponse([
             'collection' => page('products')->children(),
         ])->body(), true);
         $this->assertEquals(200, $response['code']);
@@ -90,7 +105,7 @@ final class ApiCase extends KirbyTestCase {
     }
 
     public function testConvertsPlainArrayToJsonRepresentation() {
-        $response = json_decode($this->api->response([
+        $response = json_decode($this->api->autoResponse([
             'key' => 'value',
         ])->body(), true);
         $this->assertEquals(['key' => 'value'], $response);
@@ -98,7 +113,7 @@ final class ApiCase extends KirbyTestCase {
 
     public function testReturnsErrorResponseIfActionDoesNotReturnArray() {
         $this->expectException('TypeError');
-        $response = $this->api->response('Invalid Body');
+        $response = $this->api->autoResponse('Invalid Body');
     }
 
 }
