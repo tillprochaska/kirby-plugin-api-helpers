@@ -2,6 +2,16 @@
 
 namespace TillProchaska\ApiHelpers;
 
+function action() {
+    return ['function'];
+}
+
+class Controller {
+    public static function action() {
+        return ['method'];
+    }
+}
+
 final class ApiCase extends KirbyTestCase {
 
     public function setUp() {
@@ -46,6 +56,26 @@ final class ApiCase extends KirbyTestCase {
 
         $this->assertEquals('v1/product/(:all)', $routes[0]['pattern']);
         $this->assertEquals('GET', $routes[0]['method']);
+    }
+
+    public function testAddClosureAsAction() {
+        $this->api->route('/', 'GET', function() {
+            return ['closure'];
+        });
+        $result = $this->api->routes()[0]['action']();
+        $this->assertEquals('["closure"]', $result->body());
+    }
+
+    public function testAddFunctionAsAction() {
+        $this->api->route('/', 'GET', '\TillProchaska\ApiHelpers\action');
+        $result = $this->api->routes()[0]['action']();
+        $this->assertEquals('["function"]', $result->body());
+    }
+
+    public function testAddMethodAsAction() {
+        $this->api->route('/', 'GET', '\TillProchaska\ApiHelpers\Controller::action');
+        $result = $this->api->routes()[0]['action']();
+        $this->assertEquals('["method"]', $result->body());
     }
 
     public function testAddRoutesInGivenOrder() {

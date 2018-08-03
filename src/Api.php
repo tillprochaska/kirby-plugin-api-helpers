@@ -52,7 +52,7 @@ class Api {
      * @param \Closure $action Request handler
      * @return Api
      */
-    public function route(string $pattern, string $method, \Closure $action): Api {
+    public function route(string $pattern, string $method, callable $action): Api {
         $this->routes[] = [
             'pattern' => $pattern,
             'method' => $method,
@@ -225,35 +225,35 @@ class Api {
     /**
      * Add a new route for HTTP GET requests
      */
-    public function get(string $pattern, \Closure $action): Api {
+    public function get(string $pattern, callable $action): Api {
         return $this->route($pattern, 'GET', $action);
     }
 
     /**
      * Add a new route for HTTP POST requests
      */
-    public function post(string $pattern, \Closure $action): Api {
+    public function post(string $pattern, callable $action): Api {
         return $this->route($pattern, 'POST', $action);
     }
 
     /**
      * Add a new route for HTTP PUT requests
      */
-    public function put(string $pattern, \Closure $action): Api {
+    public function put(string $pattern, callable $action): Api {
         return $this->route($pattern, 'PUT', $action);
     }
 
     /**
      * Add a new route for HTTP PATCH requests
      */
-    public function patch(string $pattern, \Closure $action): Api {
+    public function patch(string $pattern, callable $action): Api {
         return $this->route($pattern, 'PATCH', $action);
     }
 
     /**
      * Add a new route for HTTP DELETE requests
      */
-    public function delete(string $pattern, \Closure $action): Api {
+    public function delete(string $pattern, callable $action): Api {
         return $this->route($pattern, 'DELETE', $action);
     }
 
