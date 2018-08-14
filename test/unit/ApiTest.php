@@ -50,7 +50,7 @@ final class ApiCase extends KirbyTestCase {
     }
 
     public function testAddRoute() {
-        $routes = $this->api->route('/product/(:all)', 'GET', function($slug) {
+        $routes = $this->api->route('/product/(:all)', 'GET', function($api, $slug) {
             return ['slug' => $slug];
         })->routes();
 
@@ -81,7 +81,7 @@ final class ApiCase extends KirbyTestCase {
     public function testAddRoutesInGivenOrder() {
         $routes = $this->api
             ->route('/products', 'GET', function() {})
-            ->route('/product/(:all)', 'GET', function($slug) {})
+            ->route('/product/(:all)', 'GET', function() {})
             ->routes();
 
         $this->assertEquals('v1/products', $routes[0]['pattern']);
@@ -99,7 +99,7 @@ final class ApiCase extends KirbyTestCase {
     }
 
     public function testPassesParametersToRouteAction() {
-        $routes = $this->api->route('/product/(:all)', 'GET', function($slug) {
+        $routes = $this->api->route('/product/(:all)', 'GET', function($api, $slug) {
             return ['slug' => $slug];
         })->routes();
         $response = json_decode($routes[0]['action']->call($this, 'product-a')->body(), true);
@@ -144,6 +144,12 @@ final class ApiCase extends KirbyTestCase {
     public function testReturnsErrorResponseIfActionDoesNotReturnArray() {
         $this->expectException('TypeError');
         $response = $this->api->autoResponse('Invalid Body');
+    }
+
+    public function testPassOnResponseObjectFromRouteAction() {
+        $data = new \Kirby\Cms\Response('Response Body');
+        $response = $this->api->autoResponse($data);
+        $this->assertEquals($data, $response);
     }
 
 }

@@ -74,6 +74,7 @@ class Api {
 
         foreach($this->routes as $route) {
             $action = function(string ...$arguments) use($self, $route) {
+                $arguments = array_merge([ $self ], $arguments);
                 $data = call_user_func_array($route['action'], $arguments);
                 return $self->autoResponse($data);
             };
@@ -103,7 +104,15 @@ class Api {
      *
      * @param array $data Response body
      */
-    public function autoResponse(?array $data): Response {
+    public function autoResponse($data): Response {
+        if($data instanceof Response) {
+            return $data;
+        }
+
+        if(!is_array($data)) {
+            throw new \TypeError('Parameter has to be array or instance of \Kirby\Response');
+        }
+
         $status = $data['status'] ?? null;
         $schema = $data['schema'] ?? null;
 
