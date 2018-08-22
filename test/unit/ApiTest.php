@@ -62,20 +62,32 @@ final class ApiCase extends KirbyTestCase {
         $this->api->route('/', 'GET', function() {
             return ['closure'];
         });
-        $result = $this->api->routes()[0]['action']();
-        $this->assertEquals('["closure"]', $result->body());
+        $response = json_decode($this->api->routes()[0]['action']->call($this)->body(), true);
+        $this->assertEquals([
+            'status' => 'ok',
+            'code' => 200,
+            'data' => ['closure'],
+        ], $response);
     }
 
     public function testAddFunctionAsAction() {
         $this->api->route('/', 'GET', '\TillProchaska\ApiHelpers\action');
-        $result = $this->api->routes()[0]['action']();
-        $this->assertEquals('["function"]', $result->body());
+        $response = json_decode($this->api->routes()[0]['action']->call($this)->body(), true);
+        $this->assertEquals([
+            'status' => 'ok',
+            'code' => 200,
+            'data' => ['function'],
+        ], $response);
     }
 
     public function testAddMethodAsAction() {
         $this->api->route('/', 'GET', '\TillProchaska\ApiHelpers\Controller::action');
-        $result = $this->api->routes()[0]['action']();
-        $this->assertEquals('["method"]', $result->body());
+        $response = json_decode($this->api->routes()[0]['action']->call($this)->body(), true);
+        $this->assertEquals([
+            'status' => 'ok',
+            'code' => 200,
+            'data' => ['method'],
+        ], $response);
     }
 
     public function testAddRoutesInGivenOrder() {
@@ -103,7 +115,11 @@ final class ApiCase extends KirbyTestCase {
             return ['slug' => $slug];
         })->routes();
         $response = json_decode($routes[0]['action']->call($this, 'product-a')->body(), true);
-        $this->assertEquals(['slug' => 'product-a'], $response);
+        $this->assertEquals([
+            'status' => 'ok',
+            'code' => 200,
+            'data' => ['slug' => 'product-a'],
+        ], $response);
     }
 
     public function testConvertsPageToJsonRepresentation() {
@@ -134,11 +150,17 @@ final class ApiCase extends KirbyTestCase {
         ], $response['data']);
     }
 
-    public function testConvertsPlainArrayToJsonRepresentation() {
+    public function testWrapsPlainArrayAndConvertsToJsonRepresentation() {
         $response = json_decode($this->api->autoResponse([
             'key' => 'value',
         ])->body(), true);
-        $this->assertEquals(['key' => 'value'], $response);
+        $this->assertEquals([
+            'status' => 'ok',
+            'code' => '200',
+            'data' => [
+                'key' => 'value',
+            ],
+        ], $response);
     }
 
     public function testReturnsErrorResponseIfActionDoesNotReturnArray() {

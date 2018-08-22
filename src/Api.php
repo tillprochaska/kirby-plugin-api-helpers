@@ -124,7 +124,7 @@ class Api {
             return $this->collectionResponse($data['collection'], $schema, $status);
         }
 
-        return $this->jsonResponse($data);
+        return $this->successResponse($data);
     }
 
     /**
