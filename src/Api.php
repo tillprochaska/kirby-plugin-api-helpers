@@ -27,6 +27,7 @@ class Api {
         $this->headers = $headers;
         $this->routes = [];
         $this->schemas = [];
+        $this->filters = [];
     }
 
     /**
@@ -46,6 +47,22 @@ class Api {
     }
 
     /**
+     * Sets or gets a filter
+     *
+     * @param string $name Unique filter identifier
+     * @param array $schema Filter array
+     * @return callable|Api
+     */
+    public function filter(string $name, callable $filter = null) {
+        if(!$filter) {
+            return $this->filters[$name] ?? null;
+        } else {
+            $this->filters[$name] = $filter;
+            return $this;
+        }
+    }
+
+    /**
      * Add a new route
      *
      * @param string $pattern Route pattern
@@ -53,11 +70,33 @@ class Api {
      * @param \Closure $action Request handler
      * @return Api
      */
-    public function route(string $pattern, string $method, callable $action): Api {
+    public function route(string $pattern, string $method, callable $action, $filters = []): Api {
+        // normalize filters
+        if(is_string($filters) || is_callable($filters)) {
+            $filters = [$filters];
+        }
+
+        if(!is_array($filters)) {
+            throw new Exception('Route filters have to be passed as array or string.');
+        }
+
+        $filters = array_map(function($filter) {
+            if(is_callable($filter)) {
+                return $filter;
+            }
+
+            if(is_string($filter) && $this->filter($filter)) {
+                return $this->filter($filter);
+            }
+
+            throw new Exception('Invalid filter');
+        }, $filters);
+
         $this->routes[] = [
             'pattern' => $pattern,
             'method' => $method,
             'action' => $action,
+            'filters' => $filters,
         ];
 
         return $this;
@@ -77,10 +116,18 @@ class Api {
             $action = function(string ...$arguments) use($self, $route) {
                 $arguments = array_merge([ $self ], $arguments);
 
+                foreach($route['filters'] as $filter) {
+                    try {
+                        call_user_func_array($filter, $arguments);
+                    } catch(Exception $e) {
+                        return $self->autoResponse($e);
+                    }
+                }
+
                 try {
                     $data = call_user_func_array($route['action'], $arguments);
                 } catch(Exception $e) {
-                    $data = $e;
+                    return $self->autoResponse($e);
                 }
 
                 return $self->autoResponse($data);

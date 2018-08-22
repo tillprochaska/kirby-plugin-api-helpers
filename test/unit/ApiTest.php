@@ -199,4 +199,70 @@ final class ApiCase extends KirbyTestCase {
         ], $response);
     }
 
+    public function testAddAndGetFilter() {
+        $filter = function() {
+            return 'filter';
+        };
+
+        $this->assertEquals($this->api, $this->api->filter('test', $filter));
+        $this->assertEquals($filter, $this->api->filter('test'));
+    }
+
+    public function testAddPresetFilterToRoute() {
+        $this->api->filter('auth', function() {
+            throw new Exception('Unauthorized', 403);
+        });
+
+        $routes = $this->api->route('/secret', 'GET', function($api, $slug) {
+            return ['Answer to the Ultimate Question of Life, The Universe, and Everything' => '42'];
+        }, 'auth')->routes();
+
+        $response = json_decode($routes[0]['action']->call($this)->body(), true);
+        $this->assertEquals([
+            'status' => 'error',
+            'code' => 403,
+            'message' => 'Unauthorized',
+        ], $response);
+    }
+
+    public function testAddAnyCallableAsFilterToRoute() {
+        $routes = $this->api->route('/secret', 'GET', function($api) {
+            return ['Answer to the Ultimate Question of Life, The Universe, and Everything' => $api->answer];
+        }, function($api) {
+            $api->answer = 42;
+        })->routes();
+
+        $response = json_decode($routes[0]['action']->call($this)->body(), true);
+        $this->assertEquals([
+            'status' => 'ok',
+            'code' => 200,
+            'data' => [
+                'Answer to the Ultimate Question of Life, The Universe, and Everything' => 42,
+            ],
+        ], $response);
+    }
+
+    public function testAddMultipleFiltersToRoute() {
+        $this->api->filter('auth', function() {
+            throw new Exception('Unauthorized', 403);
+        });
+
+        $routes = $this->api->route('/secret', 'GET', function($api, $slug) {
+            return ['Answer to the Ultimate Question of Life, The Universe, and Everything' => '42'];
+        }, [
+            function($api) {
+                $api->answer = 42;
+            },
+            'auth',
+        ])->routes();
+
+        $response = json_decode($routes[0]['action']->call($this)->body(), true);
+        $this->assertEquals(42, $this->api->answer);
+        $this->assertEquals([
+            'status' => 'error',
+            'code' => 403,
+            'message' => 'Unauthorized',
+        ], $response);
+    }
+
 }
