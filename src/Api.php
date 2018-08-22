@@ -5,6 +5,7 @@ namespace TillProchaska\ApiHelpers;
 require_once 'Page.php';
 require_once 'Collection.php';
 
+use \Exception;
 use \Kirby\Http\Response;
 use \Kirby\Cms\Page as KirbyPage;
 use \Kirby\Cms\Pages as KirbyPages;
@@ -75,7 +76,13 @@ class Api {
         foreach($this->routes as $route) {
             $action = function(string ...$arguments) use($self, $route) {
                 $arguments = array_merge([ $self ], $arguments);
-                $data = call_user_func_array($route['action'], $arguments);
+
+                try {
+                    $data = call_user_func_array($route['action'], $arguments);
+                } catch(Exception $e) {
+                    $data = $e;
+                }
+
                 return $self->autoResponse($data);
             };
 
@@ -86,6 +93,7 @@ class Api {
             ];
         }
 
+        // Default route
         $routes[] = [
             'pattern' => [ $this->base, $this->base . '/(:any)' ],
             'method' => 'ALL',
@@ -109,8 +117,12 @@ class Api {
             return $data;
         }
 
+        if($data instanceof Exception) {
+            return $this->errorResponse($data->getCode(), $data->getMessage());
+        }
+
         if(!is_array($data)) {
-            throw new \TypeError('Parameter has to be array or instance of \Kirby\Response');
+            throw new \TypeError('Parameter has to be array or instance of \Kirby\Response or Exception');
         }
 
         $status = $data['status'] ?? null;
