@@ -2,6 +2,7 @@
 
 namespace TillProchaska\ApiHelpers;
 use \Exception;
+use \Kirby\Exception\NotFoundException;
 
 function action() {
     return ['function'];
@@ -175,7 +176,7 @@ final class ApiCase extends KirbyTestCase {
         $this->assertEquals($data, $response);
     }
 
-    public function testCatchErrorsInActionAndReturnErrorResponse() {
+    public function testCatchExceptionInActionAndReturnErrorResponse() {
         $routes = $this->api->route('/product/(:all)', 'GET', function($api, $slug) {
             $products = ['product-a', 'product-b'];
             if(!in_array($slug, $products)) {
@@ -196,6 +197,23 @@ final class ApiCase extends KirbyTestCase {
             'status' => 'error',
             'code' => 404,
             'message' => 'Could not find product.',
+        ], $response);
+    }
+
+    public function testCatchKirbyExceptionInActionAndReturnErrorResponse() {
+        $routes = $this->api->route('/product/(:all)', 'GET', function($api, $slug) {
+            $products = ['product-a', 'product-b'];
+            if(!in_array($slug, $products)) {
+                throw new NotFoundException();
+            }
+            return ['slug' => $slug];
+        })->routes();
+
+        $response = json_decode($this->api->routes()[0]['action']->call($this, 'product-c')->body(), true);
+        $this->assertEquals([
+            'status' => 'error',
+            'code' => 404,
+            'message' => 'Not found',
         ], $response);
     }
 
