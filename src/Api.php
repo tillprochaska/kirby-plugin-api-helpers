@@ -6,6 +6,7 @@ require_once 'Page.php';
 require_once 'Collection.php';
 
 use \Exception;
+use \Kirby\Exception\Exception as KirbyException;
 use \Kirby\Http\Response;
 use \Kirby\Cms\Page as KirbyPage;
 use \Kirby\Cms\Pages as KirbyPages;
@@ -115,6 +116,10 @@ class Api {
     public function autoResponse($data): Response {
         if($data instanceof Response) {
             return $data;
+        }
+
+        if($data instanceof KirbyException) {
+            return $this->errorResponse($data->getHTTPCode(), $data->getMessage());
         }
 
         if($data instanceof Exception) {
