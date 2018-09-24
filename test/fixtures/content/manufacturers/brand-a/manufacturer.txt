@@ -6,6 +6,4 @@ Description: Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean co
 
 ----
 
-Products:
-- products/product-a
-- products/product-b
+Products: products/product-a, products/product-b
