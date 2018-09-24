@@ -189,15 +189,12 @@ final class SchemaCase extends KirbyTestCase {
         ], $products);   
     }
 
-    public function testIncludesNullInArrayIfPageReferenceCannotBeResolved(): void {
+    public function testRemoveFalsyValuesIfPageReferenceCannotBeResolved(): void {
         $products = page('manufacturers/brand-b')->products();
         $transformer = Schema::$transformers['collection'];
 
         $products = $transformer($products);
-        $this->assertEquals([
-            ['slug' => 'product-c'],
-            null
-        ], $products);
+        $this->assertEquals([['slug' => 'product-c']], $products);
     }
 
 }
