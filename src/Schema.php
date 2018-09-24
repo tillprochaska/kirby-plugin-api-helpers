@@ -163,13 +163,17 @@ Schema::$transformers = [
      * in the `$schema` array.
      */
     'collection' => function(KirbyField $field, array $schema = []): ?array {
-        return array_map(function($id) use($schema) {
+        $data = $field->toData('yaml');
+
+        $pages = array_map(function($id) use($schema) {
             $page = page($id);
             if(!$page) return null;
 
             $page = new Page($page, $schema);
             return $page->toArray();
-        }, $field->toData('yaml'));
+        }, $data);
+
+        return array_filter($pages);
     },
 
 ];
