@@ -17,14 +17,8 @@
             "TillProchaska\\ApiHelpers\\": "src/"
         }
     },
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/k-next/kirby"
-        }
-    ],
     "require": {
-        "getkirby/cms": "dev-master"
+        "getkirby/cms": "^3.0"
     },
     "require-dev": {
         "phpunit/phpunit": "^7.2"
